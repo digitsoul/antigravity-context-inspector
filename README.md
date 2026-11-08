@@ -1,6 +1,6 @@
 # Antigravity Context Inspector Plugin
 
-A Claude-style **Context Inspector & Optimizer** plugin and auxiliary pane (`SIDECAR_UI_ENTRYPOINT_AUX_PANE`) for Google Antigravity.
+Inspect and optimize your conversation context window, including system prompt, skills, rules, and MCP tools, etc.
 
 ## Features
 

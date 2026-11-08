@@ -1,6 +1,6 @@
 {
   "display_name": "Context Inspector",
-  "description": "Claude-style Context Window breakdown, customization budget monitor, and deferred token analyzer (v0.1.4).",
+  "description": "Inspect and optimize your conversation context window, including system prompt, skills, rules, and MCP tools, etc.",
   "command": "node",
   "args": ["main.mjs"],
   "restart_policy": "always",

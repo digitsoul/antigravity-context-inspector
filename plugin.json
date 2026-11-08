@@ -2,7 +2,7 @@
   "name": "context-inspector",
   "displayName": "Context Inspector",
   "version": "0.1.3",
-  "description": "Inspect and optimize your conversation context window, system prompt, skills, rules, and eager vs. lazy MCP tools in real time.",
+  "description": "Inspect and optimize your conversation context window, including system prompt, skills, rules, and MCP tools, etc.",
   "logo": "assets/logo.svg",
   "author": {
     "name": "digitsoul",

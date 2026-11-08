@@ -1,7 +1,7 @@
 {
   "name": "antigravity-context-inspector",
   "version": "0.1.0",
-  "description": "Claude-style Context Window Inspector & Optimizer Sidecar UI Extension for Google Antigravity.",
+  "description": "Inspect and optimize your conversation context window, including system prompt, skills, rules, and MCP tools, etc.",
   "type": "module",
   "scripts": {
     "start": "node sidecars/context-inspector/main.mjs",
