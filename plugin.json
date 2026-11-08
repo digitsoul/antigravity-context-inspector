@@ -1,0 +1,21 @@
+{
+  "name": "context-inspector",
+  "displayName": "Context Inspector",
+  "version": "0.1.3",
+  "description": "Inspect and optimize your conversation context window, system prompt, skills, rules, and eager vs. lazy MCP tools in real time.",
+  "logo": "assets/logo.svg",
+  "author": {
+    "name": "wenwei",
+    "url": "https://github.com/wenwei/antigravity-context-inspector"
+  },
+  "homepage": "https://github.com/wenwei/antigravity-context-inspector#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/wenwei/antigravity-context-inspector.git"
+  },
+  "suggestedPrompts": [
+    "Analyze my current context window usage and suggest optimizations",
+    "Which MCP servers and skills are consuming the most tokens?",
+    "Open the Context Inspector panel and check my customization budget"
+  ]
+}

@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Context Inspector</title>
+  <script src="/preload.js"></script>
+  <style>
+    :root {
+      interpolate-size: allow-keywords;
+      --bg: var(--background, #18181b);
+      --fg: var(--foreground, #f4f4f5);
+      --text-secondary: color-mix(in srgb, var(--fg) 82%, var(--bg));
+      --text-subtle: color-mix(in srgb, var(--fg) 68%, var(--bg));
+      --card-bg: color-mix(in srgb, var(--fg) 5%, var(--bg));
+      --border-color: color-mix(in srgb, var(--fg) 15%, var(--bg));
+      --track-bg: color-mix(in srgb, var(--fg) 12%, var(--bg));
+      --accent-color: #3b82f6;
+      --hover-bg: color-mix(in srgb, var(--fg) 8%, var(--bg));
+      --badge-bg: color-mix(in srgb, var(--fg) 10%, var(--bg));
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      --font-mono: "SFMono-Regular", ui-monospace, Menlo, Monaco, Consolas, monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--fg);
+      font-family: var(--font-sans);
+      font-size: 12.5px;
+      line-height: 1.45;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .inspector-root {
+      padding: 12px 14px 32px;
+    }
+
+    /* Section Headers */
+    .section-block {
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .section-block:first-child {
+      padding-top: 2px;
+    }
+
+    .section-block:last-child {
+      border-bottom: none;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      gap: 8px;
+    }
+
+    .section-title {
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      letter-spacing: 0.01em;
+    }
+
+    /* Environment & Controls */
+    .env-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 4px 0;
+      font-size: 12px;
+      color: var(--fg);
+    }
+
+    .env-label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .env-icon {
+      color: var(--text-secondary);
+      flex-shrink: 0;
+      font-size: 11px;
+    }
+
+    .conv-controls {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 6px;
+    }
+
+    .conv-select {
+      flex: 1;
+      min-width: 0;
+      background: var(--card-bg);
+      color: var(--fg);
+      border: 1px solid var(--border-color);
+      border-radius: 5px;
+      padding: 4px 8px;
+      font-size: 11.5px;
+      font-family: inherit;
+      outline: none;
+    }
+
+    .conv-select:focus-visible,
+    .icon-btn:focus-visible,
+    .action-btn:focus-visible,
+    .filter-input:focus-visible,
+    summary:focus-visible {
+      outline: 2px solid var(--accent-color);
+      outline-offset: 1px;
+    }
+
+    .icon-btn {
+      background: var(--card-bg);
+      color: var(--fg);
+      border: 1px solid var(--border-color);
+      border-radius: 5px;
+      padding: 4px 8px;
+      font-size: 11px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+
+    .icon-btn:hover {
+      background: var(--hover-bg);
+    }
+
+    /* Claude-style Context Usage Headline */
+    .usage-headline {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 6px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .usage-pct {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--fg);
+    }
+
+    .usage-ratio {
+      font-size: 12px;
+      color: var(--text-secondary);
+      font-family: var(--font-mono);
+    }
+
+    /* Multi-segment Stacked Bar */
+    .stacked-bar {
+      display: flex;
+      width: 100%;
+      height: 6px;
+      border-radius: 999px;
+      overflow: hidden;
+      background: var(--track-bg);
+      margin-bottom: 10px;
+      gap: 1px;
+    }
+
+    .bar-segment {
+      height: 100%;
+      transition: width 220ms ease;
+    }
+
+    /* Category Rows */
+    .category-list {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .category-row {
+      display: grid;
+      grid-template-columns: 10px 1fr auto 48px;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      padding: 1.5px 0;
+    }
+
+    .category-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+
+    .category-name {
+      color: var(--text-secondary);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .category-row.active .category-name {
+      color: var(--fg);
+    }
+
+    .category-tokens {
+      color: var(--text-secondary);
+      text-align: right;
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+    }
+
+    .category-pct {
+      color: var(--text-subtle);
+      text-align: right;
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+    }
+
+    .category-divider {
+      height: 1px;
+      background: var(--border-color);
+      margin: 5px 0;
+    }
+
+    /* Budget Mini-Gauges */
+    .budget-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .budget-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 7px 9px;
+    }
+
+    .budget-top {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--text-secondary);
+      margin-bottom: 4px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .budget-track {
+      height: 4px;
+      border-radius: 99px;
+      background: var(--track-bg);
+      overflow: hidden;
+    }
+
+    .budget-fill {
+      height: 100%;
+      border-radius: 99px;
+      transition: width 220ms ease;
+    }
+
+    /* Cache & Telemetry Pills */
+    .telemetry-strip {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      padding: 2px 7px;
+      border-radius: 999px;
+      background: var(--badge-bg);
+      color: var(--text-secondary);
+      border: 1px solid var(--border-color);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .pill.good {
+      color: color-mix(in srgb, #10b981 78%, var(--fg));
+      background: color-mix(in srgb, #10b981 14%, var(--bg));
+      border-color: color-mix(in srgb, #10b981 32%, var(--bg));
+    }
+
+    .pill.warn {
+      color: color-mix(in srgb, #f59e0b 80%, var(--fg));
+      background: color-mix(in srgb, #f59e0b 14%, var(--bg));
+      border-color: color-mix(in srgb, #f59e0b 32%, var(--bg));
+    }
+
+    /* Expandable Accordions (<details> + interpolate-size) */
+    details.drilldown {
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    details.drilldown:last-of-type {
+      border-bottom: none;
+    }
+
+    details.drilldown > summary {
+      list-style: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 2px;
+      cursor: pointer;
+      user-select: none;
+      font-size: 12px;
+      color: var(--fg);
+      transition: color 120ms ease;
+    }
+
+    details.drilldown > summary::-webkit-details-marker {
+      display: none;
+    }
+
+    details.drilldown > summary:hover {
+      color: var(--accent-color);
+    }
+
+    .summary-left {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 500;
+      color: var(--fg);
+    }
+
+    .chevron {
+      display: inline-block;
+      font-size: 10px;
+      transition: transform 160ms ease;
+      color: var(--text-secondary);
+    }
+
+    details[open] > summary > .summary-left > .chevron {
+      transform: rotate(90deg);
+    }
+
+    .summary-count {
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      color: var(--text-secondary);
+    }
+
+    .drilldown-body {
+      padding: 2px 0 10px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    /* Filter input inside Skills/MCP drilldowns */
+    .filter-input {
+      width: 100%;
+      background: var(--card-bg);
+      color: var(--fg);
+      border: 1px solid var(--border-color);
+      border-radius: 5px;
+      padding: 4px 8px;
+      font-size: 11.5px;
+      margin-bottom: 4px;
+    }
+
+    .filter-input::placeholder {
+      color: var(--text-subtle);
+    }
+
+    /* Item rows inside drilldowns */
+    .item-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 3px 4px;
+      border-radius: 4px;
+      font-size: 11.5px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .item-row:hover {
+      background: var(--hover-bg);
+    }
+
+    .item-main {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
+      flex: 1;
+    }
+
+    .item-title {
+      color: var(--fg);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-family: var(--font-mono);
+      font-size: 11px;
+    }
+
+    .item-metrics {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+      font-family: var(--font-mono);
+      font-size: 11px;
+    }
+
+    .metric-active {
+      color: var(--fg);
+    }
+
+    .metric-deferred {
+      color: var(--text-secondary);
+      font-size: 10.5px;
+    }
+
+    .tag {
+      font-size: 9.5px;
+      font-weight: 600;
+      padding: 1px 5px;
+      border-radius: 3px;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      background: var(--badge-bg);
+      color: var(--text-secondary);
+      flex-shrink: 0;
+    }
+
+    .tag.eager {
+      color: color-mix(in srgb, #10b981 80%, var(--fg));
+      background: color-mix(in srgb, #10b981 15%, var(--bg));
+    }
+
+    .tag.lazy {
+      color: color-mix(in srgb, #3b82f6 80%, var(--fg));
+      background: color-mix(in srgb, #3b82f6 15%, var(--bg));
+    }
+
+    .tag.builtin {
+      color: color-mix(in srgb, #a855f7 80%, var(--fg));
+      background: color-mix(in srgb, #a855f7 15%, var(--bg));
+    }
+
+    /* Nested MCP Server details */
+    details.nested-server {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 5px;
+      padding: 4px 7px;
+    }
+
+    details.nested-server > summary {
+      list-style: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      font-size: 11.5px;
+      gap: 6px;
+      color: var(--fg);
+    }
+
+    details.nested-server > summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .nested-tools {
+      margin-top: 6px;
+      padding-top: 5px;
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      max-height: 210px;
+      overflow-y: auto;
+    }
+
+    /* Recommendations */
+    .rec-list {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .rec-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-left: 3px solid #3b82f6;
+      border-radius: 5px;
+      padding: 7px 9px;
+    }
+
+    .rec-card.high {
+      border-left-color: #f97316;
+    }
+
+    .rec-card.medium {
+      border-left-color: #eab308;
+    }
+
+    .rec-title {
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--fg);
+      margin-bottom: 3px;
+    }
+
+    .rec-desc {
+      font-size: 11px;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+    }
+
+    .action-btn {
+      background: color-mix(in srgb, #3b82f6 15%, var(--bg));
+      color: color-mix(in srgb, #3b82f6 75%, var(--fg));
+      border: 1px solid color-mix(in srgb, #3b82f6 35%, var(--bg));
+      border-radius: 4px;
+      padding: 3px 8px;
+      font-size: 11px;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .action-btn:hover {
+      background: color-mix(in srgb, #3b82f6 25%, var(--bg));
+    }
+
+    .error-banner {
+      background: rgba(239, 68, 68, 0.12);
+      border: 1px solid rgba(239, 68, 68, 0.35);
+      color: #fca5a5;
+      border-radius: 5px;
+      padding: 6px 8px;
+      font-size: 11px;
+      margin-bottom: 8px;
+      display: none;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+        transition: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="inspector-root">
+  <div id="error-banner" class="error-banner"></div>
+
+  <!-- Environment & Active Trajectory Header -->
+  <section class="section-block">
+    <div class="section-header">
+      <span class="section-title">Environment</span>
+      <span id="model-badge" class="pill">Loading...</span>
+    </div>
+    <div class="env-row">
+      <div class="env-label" title="Active Workspace">
+        <span class="env-icon">📁</span>
+        <span id="workspace-label">Workspace</span>
+      </div>
+      <span id="turn-badge" class="pill">0 turns</span>
+    </div>
+    <div class="conv-controls">
+      <select id="conv-select" class="conv-select" aria-label="Select conversation"></select>
+      <button id="refresh-btn" class="icon-btn" type="button" title="Refresh context telemetry">
+        ↻ Refresh
+      </button>
+    </div>
+  </section>
+
+  <!-- Claude-style Context Breakdown -->
+  <section class="section-block">
+    <div class="section-header">
+      <span class="section-title">Context</span>
+      <span id="mode-indicator" class="pill">Live</span>
+    </div>
+
+    <div class="usage-headline">
+      <span id="usage-pct" class="usage-pct">0% used</span>
+      <span id="usage-ratio" class="usage-ratio">0 / 256k</span>
+    </div>
+
+    <div id="stacked-bar" class="stacked-bar" role="img" aria-label="Context usage distribution"></div>
+
+    <div id="category-list" class="category-list"></div>
+
+    <!-- Antigravity Customization & Rules Budgets -->
+    <div class="budget-grid">
+      <div class="budget-card">
+        <div class="budget-top">
+          <span>Customizations</span>
+          <span id="cust-budget-label">0 / 20k</span>
+        </div>
+        <div class="budget-track">
+          <div id="cust-budget-fill" class="budget-fill" style="width: 0%; background: #a855f7;"></div>
+        </div>
+      </div>
+      <div class="budget-card">
+        <div class="budget-top">
+          <span>Rules Budget</span>
+          <span id="rules-budget-label">0 / 20k</span>
+        </div>
+        <div class="budget-track">
+          <div id="rules-budget-fill" class="budget-fill" style="width: 0%; background: #ec4899;"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="telemetry-strip" class="telemetry-strip"></div>
+  </section>
+
+  <!-- Expandable Drill-Down Accordions -->
+  <section class="section-block" id="drilldowns-section">
+    <!-- MCP tools -->
+    <details class="drilldown" open>
+      <summary>
+        <span class="summary-left">
+          <span class="chevron">▸</span>
+          <span>MCP tools</span>
+        </span>
+        <span id="mcp-summary-count" class="summary-count">0</span>
+      </summary>
+      <div class="drilldown-body">
+        <input
+          id="mcp-filter"
+          class="filter-input"
+          type="search"
+          placeholder="Filter MCP servers or tools..."
+          aria-label="Filter MCP servers or tools"
+        />
+        <div id="mcp-servers-list" style="display:flex;flex-direction:column;gap:5px;"></div>
+      </div>
+    </details>
+
+    <!-- Skills -->
+    <details class="drilldown">
+      <summary>
+        <span class="summary-left">
+          <span class="chevron">▸</span>
+          <span>Skills</span>
+        </span>
+        <span id="skills-summary-count" class="summary-count">0</span>
+      </summary>
+      <div class="drilldown-body">
+        <input
+          id="skills-filter"
+          class="filter-input"
+          type="search"
+          placeholder="Filter skills by name or plugin..."
+          aria-label="Filter skills"
+        />
+        <div id="skills-list"></div>
+      </div>
+    </details>
+
+    <!-- System tools -->
+    <details class="drilldown">
+      <summary>
+        <span class="summary-left">
+          <span class="chevron">▸</span>
+          <span>System tools</span>
+        </span>
+        <span id="systools-summary-count" class="summary-count">0</span>
+      </summary>
+      <div id="systools-list" class="drilldown-body"></div>
+    </details>
+
+    <!-- System prompt sections -->
+    <details class="drilldown">
+      <summary>
+        <span class="summary-left">
+          <span class="chevron">▸</span>
+          <span>System prompt sections</span>
+        </span>
+        <span id="sysprompt-summary-count" class="summary-count">0</span>
+      </summary>
+      <div id="sysprompt-list" class="drilldown-body"></div>
+    </details>
+
+    <!-- Memory / Rules files -->
+    <details class="drilldown">
+      <summary>
+        <span class="summary-left">
+          <span class="chevron">▸</span>
+          <span>Rules &amp; memory files</span>
+        </span>
+        <span id="rules-summary-count" class="summary-count">0</span>
+      </summary>
+      <div id="rules-list" class="drilldown-body"></div>
+    </details>
+
+    <!-- Heaviest Message Steps -->
+    <details class="drilldown">
+      <summary>
+        <span class="summary-left">
+          <span class="chevron">▸</span>
+          <span>Heaviest chat steps</span>
+        </span>
+        <span id="steps-summary-count" class="summary-count">0</span>
+      </summary>
+      <div id="steps-list" class="drilldown-body"></div>
+    </details>
+  </section>
+
+  <!-- Optimization Recommendations -->
+  <section class="section-block" id="recommendations-section">
+    <div class="section-header">
+      <span class="section-title">Context Optimization</span>
+    </div>
+    <div id="rec-list" class="rec-list"></div>
+  </section>
+  </main>
+
+  <script type="module" src="/app.js"></script>
+</body>
+</html>

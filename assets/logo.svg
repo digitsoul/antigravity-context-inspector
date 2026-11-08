@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" fill="none">
+  <defs>
+    <linearGradient id="cardGrad" x1="14" y1="14" x2="114" y2="114" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#1E293B" />
+      <stop offset="100%" stop-color="#0F172A" />
+    </linearGradient>
+    <linearGradient id="accentGrad" x1="28" y1="34" x2="100" y2="34" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#3B82F6" />
+      <stop offset="55%" stop-color="#10B981" />
+      <stop offset="100%" stop-color="#A855F7" />
+    </linearGradient>
+  </defs>
+
+  <!-- Outer rounded container with ~11% margin (14px inset on 128x128) -->
+  <rect x="14" y="14" width="100" height="100" rx="22" fill="url(#cardGrad)" stroke="#38BDF8" stroke-width="2.5" stroke-opacity="0.55" />
+
+  <!-- Top Context Window Multi-Segment Stacked Bar -->
+  <rect x="28" y="30" width="32" height="8" rx="4" fill="#3B82F6" />
+  <rect x="63" y="30" width="14" height="8" rx="3" fill="#F97316" />
+  <rect x="80" y="30" width="10" height="8" rx="3" fill="#10B981" />
+  <rect x="93" y="30" width="7" height="8" rx="3" fill="#A855F7" />
+
+  <!-- Category Breakdown Rows -->
+  <circle cx="32" cy="52" r="4" fill="#3B82F6" />
+  <rect x="42" y="49" width="36" height="6" rx="3" fill="#E2E8F0" />
+  <rect x="84" y="49" width="16" height="6" rx="3" fill="#94A3B8" />
+
+  <circle cx="32" cy="66" r="4" fill="#F97316" />
+  <rect x="42" y="63" width="28" height="6" rx="3" fill="#E2E8F0" />
+  <rect x="84" y="63" width="16" height="6" rx="3" fill="#94A3B8" />
+
+  <circle cx="32" cy="80" r="4" fill="#10B981" />
+  <rect x="42" y="77" width="32" height="6" rx="3" fill="#E2E8F0" />
+  <rect x="84" y="77" width="16" height="6" rx="3" fill="#94A3B8" />
+
+  <!-- Bottom Budget Gauge -->
+  <rect x="28" y="93" width="72" height="6" rx="3" fill="#334155" />
+  <rect x="28" y="93" width="46" height="6" rx="3" fill="url(#accentGrad)" />
+</svg>

@@ -1,0 +1,15 @@
+{
+  "name": "antigravity-context-inspector",
+  "version": "0.1.0",
+  "description": "Claude-style Context Window Inspector & Optimizer Sidecar UI Extension for Google Antigravity.",
+  "type": "module",
+  "scripts": {
+    "start": "node sidecars/context-inspector/main.mjs",
+    "test": "node --test test/contextAggregator.test.mjs",
+    "setup": "node scripts/install-sidecar.mjs",
+    "package": "node scripts/package-marketplace.mjs"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
