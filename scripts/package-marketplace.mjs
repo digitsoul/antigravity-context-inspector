@@ -36,7 +36,7 @@ const sha256 = createHash('sha256').update(zipBuffer).digest('hex');
 
 const baseUrl =
   process.env.MARKETPLACE_BASE_URL ||
-  `https://github.com/wenwei/antigravity-context-inspector/releases/download/v${manifest.version}`;
+  `https://github.com/digitsoul/antigravity-context-inspector/releases/download/v${manifest.version}`;
 
 const catalogEntry = {
   name: manifest.name,

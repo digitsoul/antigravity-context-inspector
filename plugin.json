@@ -5,13 +5,13 @@
   "description": "Inspect and optimize your conversation context window, system prompt, skills, rules, and eager vs. lazy MCP tools in real time.",
   "logo": "assets/logo.svg",
   "author": {
-    "name": "wenwei",
-    "url": "https://github.com/wenwei/antigravity-context-inspector"
+    "name": "digitsoul",
+    "url": "https://github.com/digitsoul"
   },
-  "homepage": "https://github.com/wenwei/antigravity-context-inspector#readme",
+  "homepage": "https://github.com/digitsoul/antigravity-context-inspector#readme",
   "repository": {
     "type": "git",
-    "url": "https://github.com/wenwei/antigravity-context-inspector.git"
+    "url": "https://github.com/digitsoul/antigravity-context-inspector.git"
   },
   "suggestedPrompts": [
     "Analyze my current context window usage and suggest optimizations",
